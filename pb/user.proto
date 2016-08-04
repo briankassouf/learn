@@ -1,0 +1,39 @@
+
+syntax = "proto3";
+
+package pb;
+
+// The Add service definition.
+service UserService {
+    // Sums two integers.
+    rpc GetUser (GetRequest) returns (UserResponse) {}
+
+    // Concatenates two strings
+    rpc SaveUser (SaveRequest) returns (UserResponse) {}
+}
+
+// Requests
+
+message GetRequest {
+	string id = 1;
+}
+
+message SaveRequest {
+	User user = 1;
+}
+
+// Responses
+
+message UserResponse {
+    User user = 1;
+}
+
+// STRUCTURE
+
+message User {
+    string id = 1;
+    string firstName = 2;
+    string lastName = 3;
+    string email = 4;
+	string username = 5;
+}
