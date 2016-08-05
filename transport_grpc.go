@@ -10,12 +10,33 @@ import (
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 )
 
+func MakeGRPCServer(ctx context.Context, endpoints Endpoints) pb.UserServiceServer {
+	options := []grpctransport.ServerOption{}
+
+	return &grpcServer{
+		createUser: grpctransport.NewServer(
+			ctx,
+			endpoints.CreateUserEndpoint,
+			DecodeGRPCCreateUserRequest,
+			EncodeGRPCCreateUserResponse,
+			options...,
+		),
+		getUser: grpctransport.NewServer(
+			ctx,
+			endpoints.GetUserEndpoint,
+			DecodeGRPCGetUserRequest,
+			EncodeGRPCGetUserResponse,
+			options...,
+		),
+	}
+}
+
 type grpcServer struct {
 	createUser grpctransport.Handler
 	getUser    grpctransport.Handler
 }
 
-func (s *grpcServer) CreateUser(ctx context.Context, req *pb.SaveRequest) (*pb.UserResponse, error) {
+func (s *grpcServer) CreateUser(ctx context.Context, req *pb.CreateRequest) (*pb.UserResponse, error) {
 	_, rep, err := s.createUser.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err
@@ -36,7 +57,7 @@ func (s *grpcServer) GetUser(ctx context.Context, req *pb.GetRequest) (*pb.UserR
 // DecodeGRPCCreateUserRequest is a transport/grpc.DecodeRequestFunc that converts a
 // gRPC create user request to a user-domain create user request. Primarily useful in a server.
 func DecodeGRPCCreateUserRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*pb.SaveRequest)
+	req := grpcReq.(*pb.CreateRequest)
 	return CreateUserRequest{
 		User: &User{
 			req.User.Id,
@@ -121,7 +142,7 @@ func EncodeGRPCGetUserResponse(_ context.Context, response interface{}) (interfa
 // user-domain Create User request to a gRPC Create User request. Primarily useful in a client.
 func EncodeGRPCCreateUserRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(CreateUserRequest)
-	return &pb.SaveRequest{
+	return &pb.CreateRequest{
 		User: &pb.User{
 			req.User.Id,
 			req.User.FirstName,

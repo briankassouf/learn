@@ -11,6 +11,28 @@ type Endpoints struct {
 	GetUserEndpoint    endpoint.Endpoint
 }
 
+// CreateUser implements Service. Primarily useful in a client.
+func (e Endpoints) CreateUser(ctx context.Context, user *User) (*User, error) {
+	request := CreateUserRequest{User: user}
+	response, err := e.CreateUserEndpoint(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.(CreateUserResponse).User, nil
+}
+
+// GetUser implements Service. Primarily useful in a client.
+func (e Endpoints) GetUser(ctx context.Context, id string) (*User, error) {
+	request := GetUserRequest{Id: id}
+	response, err := e.GetUserEndpoint(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.(GetUserResponse).User, nil
+}
+
 func MakeCreateUserEndpoint(s UserService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		userRequest := request.(CreateUserRequest)

@@ -15,6 +15,12 @@ type basicService struct {
 	Users map[string]*User
 }
 
+func NewBasicService() UserService {
+	return basicService{
+		make(map[string]*User),
+	}
+}
+
 func (s basicService) CreateUser(_ context.Context, user *User) (*User, error) {
 	s.Users[user.Id] = user
 

@@ -3,13 +3,10 @@ syntax = "proto3";
 
 package pb;
 
-// The Add service definition.
 service UserService {
-    // Sums two integers.
     rpc GetUser (GetRequest) returns (UserResponse) {}
 
-    // Concatenates two strings
-    rpc SaveUser (SaveRequest) returns (UserResponse) {}
+    rpc CreateUser (CreateRequest) returns (UserResponse) {}
 }
 
 // Requests
@@ -18,7 +15,7 @@ message GetRequest {
 	string id = 1;
 }
 
-message SaveRequest {
+message CreateRequest {
 	User user = 1;
 }
 
