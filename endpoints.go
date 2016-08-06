@@ -1,9 +1,14 @@
 package learn
 
 import (
+	"fmt"
+	"time"
+
 	"golang.org/x/net/context"
 
 	"github.com/go-kit/kit/endpoint"
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/metrics"
 )
 
 type Endpoints struct {
@@ -54,6 +59,32 @@ func MakeGetUserEndpoint(s UserService) endpoint.Endpoint {
 			User: user,
 			Err:  err,
 		}, nil
+	}
+}
+
+func EndpointLoggingMiddleware(logger log.Logger) endpoint.Middleware {
+	return func(next endpoint.Endpoint) endpoint.Endpoint {
+		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+
+			defer func(begin time.Time) {
+				logger.Log("error", err, "took", time.Since(begin))
+			}(time.Now())
+
+			return next(ctx, request)
+		}
+	}
+}
+
+func EndpointMetricsMiddleware(duration metrics.TimeHistogram) endpoint.Middleware {
+	return func(next endpoint.Endpoint) endpoint.Endpoint {
+		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+			defer func(begin time.Time) {
+				f := metrics.Field{Key: "success", Value: fmt.Sprint(err == nil)}
+				duration.With(f).Observe(time.Since(begin))
+			}(time.Now())
+
+			return next(ctx, request)
+		}
 	}
 }
 

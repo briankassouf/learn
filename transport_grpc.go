@@ -7,11 +7,12 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/briankassouf/learn/pb"
+	"github.com/go-kit/kit/log"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 )
 
-func MakeGRPCServer(ctx context.Context, endpoints Endpoints) pb.UserServiceServer {
-	options := []grpctransport.ServerOption{}
+func MakeGRPCServer(ctx context.Context, endpoints Endpoints, logger log.Logger) pb.UserServiceServer {
+	options := []grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger)}
 
 	return &grpcServer{
 		createUser: grpctransport.NewServer(
