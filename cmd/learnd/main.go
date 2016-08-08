@@ -16,9 +16,9 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
-	"github.com/briankassouf/kit/auth/jwt"
 	"github.com/briankassouf/learn"
 	"github.com/briankassouf/learn/pb"
+	"github.com/go-kit/kit/auth/jwt"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/metrics"
@@ -29,6 +29,7 @@ import (
 
 func main() {
 	var (
+		httpAddr = flag.String("http.addr", ":8081", "HTTP listen address")
 		grpcAddr = flag.String("grpc.addr", ":8082", "gRPC (HTTP) listen address")
 	)
 	flag.Parse()
@@ -151,6 +152,14 @@ func main() {
 
 		fmt.Println("addr", *grpcAddr)
 		errc <- s.Serve(ln)
+	}()
+
+	// HTTP transport.
+	go func() {
+		logger := log.NewContext(logger).With("transport", "HTTP")
+		h := learn.MakeHTTPHandler(ctx, endpoints, logger)
+		logger.Log("addr", *httpAddr)
+		errc <- http.ListenAndServe(*httpAddr, h)
 	}()
 
 	fmt.Println("exit", <-errc)

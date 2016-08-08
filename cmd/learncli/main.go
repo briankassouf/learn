@@ -10,12 +10,14 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/briankassouf/learn"
-	grpcclient "github.com/briankassouf/learn/client"
+	client "github.com/briankassouf/learn/client"
+	"github.com/go-kit/kit/log"
 )
 
 func main() {
 	var (
 		grpcAddr = flag.String("grpc.addr", "", "gRPC (HTTP) address of addsvc")
+		httpAddr = flag.String("http.addr", "", "http address")
 		method   = flag.String("method", "create", "create, get")
 	)
 	flag.Parse()
@@ -30,15 +32,27 @@ func main() {
 		os.Exit(1)
 	}
 
-	conn, err := grpc.Dial(*grpcAddr, grpc.WithInsecure(), grpc.WithTimeout(time.Second))
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v", err)
+	var service learn.UserService
+	var err error
+	if *httpAddr != "" {
+		service, err = client.NewHTTP(*httpAddr, log.NewNopLogger())
+	} else if *grpcAddr != "" {
+		conn, err := grpc.Dial(*grpcAddr, grpc.WithInsecure(), grpc.WithTimeout(time.Second))
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v", err)
+			os.Exit(1)
+		}
+		defer conn.Close()
+		service = client.New(conn)
+
+	} else {
+		fmt.Fprintf(os.Stderr, "error: no remote address specified\n")
 		os.Exit(1)
 	}
-
-	defer conn.Close()
-	var service learn.UserService
-	service = grpcclient.New(conn)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
 
 	switch *method {
 	case "create":

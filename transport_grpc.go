@@ -6,8 +6,8 @@ package learn
 import (
 	"golang.org/x/net/context"
 
-	"github.com/briankassouf/kit/auth/jwt"
 	"github.com/briankassouf/learn/pb"
+	"github.com/go-kit/kit/auth/jwt"
 	"github.com/go-kit/kit/log"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 )
