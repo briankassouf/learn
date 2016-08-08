@@ -11,10 +11,12 @@ import (
 	"syscall"
 	"time"
 
+	stdjwt "github.com/dgrijalva/jwt-go"
 	jujuratelimit "github.com/juju/ratelimit"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
+	"github.com/briankassouf/kit/auth/jwt"
 	"github.com/briankassouf/learn"
 	"github.com/briankassouf/learn/pb"
 	"github.com/go-kit/kit/endpoint"
@@ -82,11 +84,13 @@ func main() {
 		createUserDuration := duration.With(metrics.Field{Key: "method", Value: "CreateUser"})
 		createUserLogger := log.NewContext(logger).With("method", "CreateUser")
 		limiter := ratelimit.NewTokenBucketLimiter(jujuratelimit.NewBucketWithRate(1, 1))
+		auth := jwt.NewParser(func(token *stdjwt.Token) (interface{}, error) { return []byte("testSigningString1"), nil }, stdjwt.SigningMethodHS256)
 
 		createUserEndpoint = learn.MakeCreateUserEndpoint(service)
 		createUserEndpoint = limiter(createUserEndpoint)
 		createUserEndpoint = learn.EndpointLoggingMiddleware(createUserLogger)(createUserEndpoint)
 		createUserEndpoint = learn.EndpointMetricsMiddleware(createUserDuration)(createUserEndpoint)
+		createUserEndpoint = auth(createUserEndpoint)
 	}
 
 	var getUserEndpoint endpoint.Endpoint

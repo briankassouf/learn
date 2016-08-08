@@ -6,6 +6,7 @@ package learn
 import (
 	"golang.org/x/net/context"
 
+	"github.com/briankassouf/kit/auth/jwt"
 	"github.com/briankassouf/learn/pb"
 	"github.com/go-kit/kit/log"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
@@ -20,7 +21,7 @@ func MakeGRPCServer(ctx context.Context, endpoints Endpoints, logger log.Logger)
 			endpoints.CreateUserEndpoint,
 			DecodeGRPCCreateUserRequest,
 			EncodeGRPCCreateUserResponse,
-			options...,
+			append(options, grpctransport.ServerBefore(jwt.ToGRPCContext()))...,
 		),
 		getUser: grpctransport.NewServer(
 			ctx,

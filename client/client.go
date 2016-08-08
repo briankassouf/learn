@@ -3,10 +3,12 @@ package client
 import (
 	"time"
 
+	stdjwt "github.com/dgrijalva/jwt-go"
 	jujuratelimit "github.com/juju/ratelimit"
 	"github.com/sony/gobreaker"
 	"google.golang.org/grpc"
 
+	"github.com/briankassouf/kit/auth/jwt"
 	"github.com/briankassouf/learn"
 	"github.com/briankassouf/learn/pb"
 	"github.com/go-kit/kit/circuitbreaker"
@@ -26,9 +28,12 @@ func New(conn *grpc.ClientConn) learn.UserService {
 
 	limiter := ratelimit.NewTokenBucketLimiter(jujuratelimit.NewBucketWithRate(100, 100))
 	options := []grpctransport.ClientOption{}
+	jwtSigner := jwt.NewSigner("testSigningString1", stdjwt.SigningMethodHS256, stdjwt.MapClaims{})
 
 	var createUserEndpoint endpoint.Endpoint
 	{
+		options = append(options, grpctransport.ClientBefore(jwt.FromGRPCContext()))
+
 		createUserEndpoint = grpctransport.NewClient(
 			conn,
 			"UserService",
@@ -43,6 +48,7 @@ func New(conn *grpc.ClientConn) learn.UserService {
 			Name:    "CreateUser",
 			Timeout: 30 * time.Second,
 		}))(createUserEndpoint)
+		createUserEndpoint = jwtSigner(createUserEndpoint)
 	}
 
 	var getUserEndpoint endpoint.Endpoint
