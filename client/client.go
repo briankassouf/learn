@@ -40,7 +40,7 @@ func NewHTTP(instance string, logger log.Logger) (learn.UserService, error) {
 	// for the entire remote instance, too.
 
 	limiter := ratelimit.NewTokenBucketLimiter(jujuratelimit.NewBucketWithRate(100, 100))
-	jwtSigner := jwt.NewSigner("testSigningString11", stdjwt.SigningMethodHS256, stdjwt.MapClaims{})
+	jwtSigner := jwt.NewSigner("testSigningString1", stdjwt.SigningMethodHS256, stdjwt.MapClaims{})
 	options := []httptransport.ClientOption{}
 
 	var createUserEndpoint endpoint.Endpoint
